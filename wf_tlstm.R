@@ -1,8 +1,9 @@
 source("carrega.R")
 source("wf_experiment.R")
 library(reticulate)
-source("https://raw.githubusercontent.com/cefet-rj-dal/dal/main/examples/ts_tlstm.R")
-reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/dal/main/examples/ts_tlstm.py")
+
+source("https://raw.githubusercontent.com/cefet-rj-dal/tspred-it/main/examples/ts_tlstm.R")
+reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/tspred-it/main/examples/ts_tlstm.py")
 
 base_model = ts_tlstm()
 base_model$log <- FALSE
