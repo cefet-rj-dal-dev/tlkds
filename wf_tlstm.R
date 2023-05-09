@@ -9,7 +9,7 @@ base_model = ts_tlstm()
 base_model$log <- FALSE
 ranges <- list(epochs=10000)
 
-result_lstm_swminmax_is <- run_machine(dataset = dataset[2],
+result_lstm_an_is <- run_machine(dataset = dataset[2],
                                        base_model = base_model,
                                        sw_size = 8,
                                        input_size = 3:7,
@@ -21,4 +21,4 @@ result_lstm_swminmax_is <- run_machine(dataset = dataset[2],
                                        augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                        ro = TRUE,
                                        silent = TRUE)
-save(result_lstm_swminmax_is, file="saved/result_lstm_swminmax_is.RData")
+save(result_lstm_an_is, file="saved/result_lstm_an_is.RData")
