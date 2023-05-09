@@ -18,4 +18,5 @@ result_svm_swminmax_is <- run_machine(dataset = dataset[2],
                                       augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                       ro = TRUE,
                                       silent = TRUE)
+save(result_svm_swminmax_is, file="saved/result_svm_swminmax_is.RData")
 

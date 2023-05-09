@@ -19,6 +19,7 @@ if (TRUE) {
                                     augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                     ro = TRUE,
                                     silent = TRUE)
+  save(result_mlp_prep_is, file="saved/result_mlp_prep_is.RData")
 }
 
 if (FALSE) {
@@ -34,6 +35,7 @@ if (FALSE) {
                                     augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                     ro = TRUE,
                                     silent = TRUE)
+  save(result_mlp_diff_is, file="saved/result_mlp_diff_is.RData")
   
   result_mlp_an_is <- run_machine(dataset = dataset,
                                   base_model = base_model,
@@ -47,6 +49,7 @@ if (FALSE) {
                                   augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                   ro = TRUE,
                                   silent = TRUE)
+  save(result_mlp_an_is, file="saved/result_mlp_an_is.RData")
   
   result_mlp_gminmax_is <- run_machine(dataset = dataset,
                                        base_model = base_model,
@@ -60,6 +63,7 @@ if (FALSE) {
                                        augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                        ro = TRUE,
                                        silent = TRUE)
+  save(result_mlp_gminmax_is, file="saved/result_mlp_gminmax_is.RData")
   
   result_mlp_swminmax_is <- run_machine(dataset = dataset,
                                         base_model = base_model,
@@ -73,6 +77,7 @@ if (FALSE) {
                                         augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                         ro = TRUE,
                                         silent = TRUE)
+  save(result_mlp_swminmax_is, file="saved/result_mlp_swminmax_is.RData")
   
   
   result_mlp_swminmax_jitter <- run_machine(dataset = dataset,
@@ -87,6 +92,7 @@ if (FALSE) {
                                             augment = list(jitter()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                             ro = TRUE,
                                             silent = TRUE)
+  save(result_mlp_swminmax_jitter, file="saved/result_mlp_swminmax_jitter.RData")
   
   
   result_mlp_swminmax_stretch <- run_machine(dataset = dataset,
@@ -101,6 +107,7 @@ if (FALSE) {
                                              augment = list(stretch()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                              ro = TRUE,
                                              silent = TRUE)
+  save(result_mlp_swminmax_stretch, file="saved/result_mlp_swminmax_stretch.RData")
 }
 
 
