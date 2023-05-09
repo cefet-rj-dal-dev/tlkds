@@ -1,8 +1,9 @@
 source("carrega.R")
 source("wf_experiment.R")
 library(reticulate)
-source("https://raw.githubusercontent.com/cefet-rj-dal/dal/main/examples/ts_conv1d.R")
-reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/dal/main/examples/ts_conv1d.py")
+
+source("https://raw.githubusercontent.com/cefet-rj-dal/tspred-it/main/examples/ts_conv1d.R")
+reticulate::source_python("https://raw.githubusercontent.com/cefet-rj-dal/tspred-it/main/examples/ts_conv1d.py")
 
 base_model = ts_conv1d()
 base_model$log <- FALSE
