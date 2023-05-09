@@ -6,7 +6,7 @@ base_model = ts_rf()
 base_model$log <- FALSE
 ranges <- list(nodesize=5:10, ntree=1:10)
 
-result_rfr_swminmax_is <- run_machine(dataset = dataset[2],
+result_rfr_an_is <- run_machine(dataset = dataset[2],
                                       base_model = base_model,
                                       sw_size = 8,
                                       input_size = 3:7,
@@ -18,5 +18,5 @@ result_rfr_swminmax_is <- run_machine(dataset = dataset[2],
                                       augment = list(ts_augment()), #jitter(), wormhole(), stretch(), shrink(), flip()
                                       ro = TRUE,
                                       silent = TRUE)
-save(result_rfr_swminmax_is, file="saved/result_rfr_swminmax_is.RData")
+save(result_rfr_an_is, file="saved/result_rfr_an_is.RData")
 
