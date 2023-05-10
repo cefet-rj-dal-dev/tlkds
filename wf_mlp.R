@@ -93,8 +93,7 @@ if (FALSE) {
                                             ro = TRUE,
                                             silent = TRUE)
   save(result_mlp_swminmax_jitter, file="saved/result_mlp_swminmax_jitter.RData")
-  
-  
+
   result_mlp_swminmax_stretch <- run_machine(dataset = dataset,
                                              base_model = base_model,
                                              sw_size = 8,
