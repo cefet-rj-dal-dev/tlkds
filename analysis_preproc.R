@@ -1,4 +1,4 @@
-source("graphics.R")
+library(daltoolbox)
 library(ggplot2)
 library(dplyr)
 library(reshape)
@@ -31,9 +31,9 @@ adjust_data <- function(data) {
   if (!is.null(data$method))
     data$method <- factor(data$method, levels=c("ts_conv1d", "ts_elm", "ts_mlp", "ts_rf", "ts_svm", "ts_tlstm"), 
                           labels=c("conv1d", "elm", "mlp", "rfr", "svm", "lstm"))
-  data$preprocess <- factor(data$preprocess, levels=c("ts_swminmax", "ts_diff", "ts_an", "ts_gminmax"), 
+  data$preprocess <- factor(data$preprocess, levels=c("ts_norm_swminmax", "ts_diff", "ts_an", "ts_gminmax"), 
                             labels=c("sw min-max", "diff", "an", "min-max"))
-  data$augment <- factor(data$augment, levels=c("ts_augment", "jitter", "stretch"), 
+  data$augment <- factor(data$augment, levels=c("ts_aug_none", "jitter", "stretch"), 
                          labels=c("none", "jitter", "stretch"))
   return(data)  
 }
@@ -48,7 +48,7 @@ data <- adjust_data(data) |> group_by(name, preprocess) |> summarize(test=mean(s
 
 prep_data <- cast(data, name ~ preprocess, mean)
 head(prep_data)
-grf <- plot.groupedbar(prep_data, colors=colors[1:4]) + font
+grf <- plot_groupedbar(prep_data, colors=colors[1:4]) + font
 plot(grf)
 ggsave("preprocess.png", width = 15, height = 10, units = "cm")
 
@@ -60,7 +60,7 @@ data <- data |>  dplyr::filter(test_size == 4) |> dplyr::arrange(name, method, m
 data <- adjust_data(data) |> group_by(name, augment) |> summarize(test=mean(smape_test))
 aug_data <- cast(data, name ~ augment, mean)
 head(aug_data)
-grf <- plot.groupedbar(aug_data, colors=colors[1:4]) + font
+grf <- plot_groupedbar(aug_data, colors=colors[1:4]) + font
 plot(grf)
 ggsave("augment.png", width = 15, height = 10, units = "cm")
 
@@ -74,17 +74,17 @@ data <- rbind(data, result_conv1d_an_is)
 data <- rbind(data, result_lstm_an_is)
 data <- data |>  dplyr::filter(test_size == 4 & name == 'brazil_p2o5') |> dplyr::arrange(name, method, model, test_size, smape_test)
 method_data <- adjust_data(data) |> group_by(method) |> summarize(test=mean(smape_test)) |> dplyr::select(x = method, value = test)
-grf <- plot.bar(method_data, colors=colors[c(1:5,7)]) + font
+grf <- plot_bar(method_data, colors=colors[c(1:5,7)]) + font
 plot(grf)
 ggsave("method.png", width = 15, height = 10, units = "cm")
 
 
-hyperparameters <- get(load("C:/Users/eduar/OneDrive/git/dal-dev/tlkds/hyper/brazil_p2o5-ts_mlp-8-56-3_4_5_6_7-ts_augment-ts_an_ts_gminmax_ts_swminmax-ts_augment-hparams.rdata"))
+hyperparameters <- get(load("hyper/brazil_p2o5-ts_mlp-8-56-3_4_5_6_7-ts_aug_none-ts_an_ts_gminmax_ts_norm_swminmax-ts_aug_none-hparams.rdata"))
 data <- hyperparameters |> dplyr::group_by(key) |> summarize(preprocess = min(preprocess), error = mean(error)) |> arrange(error)
 print(head(data, 10))
 data_split <- split(data, unique(data$preprocess))
-hyper_data <- data.frame(`an` = data_split$ts_an$error, `min-max` = data_split$ts_gminmax$error, `sw min-max` = data_split$ts_swminmax$error)
-grf <- plot.boxplot(hyper_data, colors="white") + font + ylim(0, 325)
+hyper_data <- data.frame(`an` = data_split$ts_an$error, `min-max` = data_split$ts_gminmax$error, `sw min-max` = data_split$ts_norm_swminmax$error)
+grf <- plot_boxplot(hyper_data, colors="white") + font + ylim(0, 325)
 plot(grf)
 ggsave("hyper.png", width = 15, height = 10, units = "cm")
 

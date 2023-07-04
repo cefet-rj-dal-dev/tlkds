@@ -1,3 +1,4 @@
+library(daltoolbox)
 library(tspredit)
 library(stringi)
 library(dplyr)
@@ -12,21 +13,22 @@ create_directories <- function() {
     dir.create('results')
 }
 
-run_arima <- function(dataset, train_size, test_size, silent, ro=TRUE) {
+describe <- function(obj) {
+  if (is.null(obj))
+    return("")
+  else
+    return(as.character(class(obj)[1]))
+}
+
+run_arima <- function(dataset, train_size, test_size, ro=TRUE) {
   create_directories()
-  base_model <- tsreg_arima()
-  base_model$log <- !silent
+  base_model <- ts_arima()
   result <- NULL
   for (j in (1:length(dataset))) {
-    if (!silent)
-      message(names(dataset)[j])
     myexp <- wf_experiment(names(dataset)[j], base_model, sw_size = 0, input_size = c(1), train_size = train_size, 
-                           filter = ts_filter(), preprocess = list(ts_normalize()), augment = list(ts_augment()), ranges = NULL) 
+                           filter = ts_aug_none(), preprocess = list(ts_aug_none()), augment = list(ts_aug_none()), ranges = NULL) 
     x <- dataset[[j]]
     myexp <- train(myexp, x)  
-    if (!silent)
-      describe(myexp$model)
-    
     if (ro) {
       results_ro <- NULL
       #rolling origin
@@ -51,7 +53,7 @@ run_arima <- function(dataset, train_size, test_size, silent, ro=TRUE) {
   return(result)
 }
 
-run_machine <- function(dataset, base_model, sw_size, input_size, train_size, test_size, ranges, filter, preprocess, augment, ro=TRUE, silent=FALSE) {
+run_machine <- function(dataset, base_model, sw_size, input_size, train_size, test_size, ranges, filter, preprocess, augment, ro=TRUE) {
   create_directories()
   result <- NULL
   exp_template <- wf_experiment("", base_model = base_model, sw_size = sw_size, input_size = input_size, train_size = train_size, 
@@ -63,13 +65,8 @@ run_machine <- function(dataset, base_model, sw_size, input_size, train_size, te
   for (j in (1:length(dataset))) {
     myexp <- exp_template
     myexp$name <- names(dataset)[j]
-    if (!silent)
-      message(myexp$name)
     x <- dataset[[j]]
     myexp <- train(myexp, x)  
-    if (!silent)
-      describe(myexp$model)
-    
     steps_ahead <- 1    
     for (j in 1:test_size) {
       if (!ro)
@@ -128,9 +125,6 @@ describe.wf_experiment <- function(obj) {
 }
 
 train.wf_experiment <- function(obj, x) {
-  if (obj$base_model$reproduce)
-    set.seed(1)
-  
   x <- x[1:obj$train_size]
   x <- na.omit(x) 
   
@@ -144,8 +138,8 @@ train.wf_experiment <- function(obj, x) {
   xy <- ts_projection(xw)      
   
   if (obj$sw_size != 0) {
-    mytune <- ts_maintune(obj$preprocess, obj$input_size, obj$base_model, obj$augment)
-    mytune$name <- describe(obj)
+    mytune <- ts_maintune(obj$input_size, obj$base_model, preprocess = obj$preprocess, augment = obj$augment)
+    mytune$name <- describe(obj$base_model)
     obj$model <- fit(mytune, xy$input, xy$output, obj$ranges)
     obj$input_size <- obj$model$input_size
     obj$preprocess <- obj$model$preprocess
@@ -153,15 +147,15 @@ train.wf_experiment <- function(obj, x) {
   } else {
     obj$model <- fit(obj$base_model, x=xy$input, y=xy$output)
     obj$input_size <- 0
-    obj$preprocess <- ts_transform()
-    obj$augment <- ts_augment()
+    obj$preprocess <- ts_aug_none()
+    obj$augment <- ts_aug_none()
   }
   
   xw <- ts_data(as.vector(x), obj$sw_size)
   xy <- ts_projection(xw)      
   
   obj$adjust <- as.vector(predict(obj$model, xy$input))
-  obj$ev_adjust <- evaluation.tsreg(as.vector(xy$output), obj$adjust)
+  obj$ev_adjust <- evaluate(obj$model, as.vector(xy$output), obj$adjust)
   
   hyperparameters <- attr(obj$model, "hyperparameters")
   if (!is.null(hyperparameters))
@@ -180,7 +174,7 @@ save_image <- function(obj, imagename, header) {
   xlabels <- 1:length(yvalues)
   if(!is.null(names(yvalues)))
     xlabels <- names(yvalues)
-  tsplot(obj$model, y=yvalues, yadj=obj$adjust, ypre=obj$prediction, main=header, xlabels=xlabels)
+  plot_ts_pred(x = xlabels, y = yvalues, yadj=obj$adjust, ypre=obj$prediction)
   # 3. Close the file
   dev.off()
 }
@@ -204,7 +198,7 @@ test.wf_experiment <- function(obj, x, test_pos, test_size, steps_ahead = 1, ro 
   }  
   obj$prediction <- as.vector(obj$prediction)
   
-  obj$ev_prediction <- evaluation.tsreg(output, obj$prediction)
+  obj$ev_prediction <- evaluate(obj$model, output, obj$prediction)
   
   
   smape_train <- 100*obj$ev_adjust$smape

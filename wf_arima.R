@@ -1,5 +1,5 @@
 source("carrega.R")
-source("wf_experiment.R")
+#source("wf_experiment.R")
 library(daltoolbox)
 library(dplyr)
 library(stringr)
@@ -10,5 +10,6 @@ library(stringi)
 #library(xlsx)
 #library(reshape)
 
-arima_ro <- run_arima(train_size = 55, test_size = 5, silent=TRUE, ro=TRUE)
-arima_ra <- run_arima(train_size = 55, test_size = 5, silent=TRUE, ro=FALSE)
+load("data/fertilizers.RData")
+
+arima_ro <- run_arima(fertilizers, train_size = 55, test_size = 5, ro=TRUE)
