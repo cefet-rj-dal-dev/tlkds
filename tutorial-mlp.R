@@ -30,7 +30,7 @@ print(ev_adjust$metrics$smape)
 
 io_test <- ts_projection(samp$test)
 prediction <- predict(model, x = io_test$input, steps_ahead = 1)
-ev_test <- evaluation.tsreg(io_test$output, prediction)
+ev_test <- evaluate(model, io_test$output, prediction)
 print(ev_test$metrics$smape)
 
 

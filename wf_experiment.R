@@ -14,70 +14,16 @@ create_directories <- function() {
 }
 
 describe <- function(obj) {
+  UseMethod("describe")
+}
+
+describe.default <- function(obj) {
   if (is.null(obj))
     return("")
   else
     return(as.character(class(obj)[1]))
 }
 
-run_arima <- function(dataset, train_size, test_size, ro=TRUE) {
-  create_directories()
-  base_model <- ts_arima()
-  result <- NULL
-  for (j in (1:length(dataset))) {
-    myexp <- wf_experiment(names(dataset)[j], base_model, sw_size = 0, input_size = c(1), train_size = train_size, 
-                           filter = ts_aug_none(), preprocess = list(ts_aug_none()), augment = list(ts_aug_none()), ranges = NULL) 
-    x <- dataset[[j]]
-    myexp <- train(myexp, x)  
-    if (ro) {
-      results_ro <- NULL
-      #rolling origin
-      for (j in 1:test_size) {
-        myexp <- test(myexp, x, test_pos = train_size + 1, test_size = j, steps_ahead = 1, ro = TRUE)  
-        results_ro <- rbind(results_ro, myexp$result)
-      }
-      result <- rbind(result, results_ro)
-      save(result, file=sprintf("results/%s-ro.rdata", describe(myexp$base_model)))
-    }
-    else {
-      results_sa <- NULL
-      #steps ahead
-      for (j in 1:test_size) {
-        myexp <- test(myexp, x, test_pos = train_size + 1, test_size = j, steps_ahead = j, ro = FALSE)  
-        results_sa <- rbind(results_sa, myexp$result)
-      }
-      result <- rbind(result, results_sa)
-      save(result, file=sprintf("results/%s-sa.rdata", describe(myexp$base_model)))
-    }
-  }
-  return(result)
-}
-
-run_machine <- function(dataset, base_model, sw_size, input_size, train_size, test_size, ranges, filter, preprocess, augment, ro=TRUE) {
-  create_directories()
-  result <- NULL
-  exp_template <- wf_experiment("", base_model = base_model, sw_size = sw_size, input_size = input_size, train_size = train_size, 
-                                filter = filter,  preprocess = preprocess, augment = augment, ranges = ranges) 
-  if (ro)
-    suffix <- "ro"
-  else
-    suffix <- "sa"
-  for (j in (1:length(dataset))) {
-    myexp <- exp_template
-    myexp$name <- names(dataset)[j]
-    x <- dataset[[j]]
-    myexp <- train(myexp, x)  
-    steps_ahead <- 1    
-    for (j in 1:test_size) {
-      if (!ro)
-        steps_ahead <- j    
-      myexp <- test(myexp, x, test_pos = train_size + 1, test_size = j, steps_ahead = steps_ahead, ro=ro)  
-      result <- rbind(result, myexp$result)
-    }
-    save(result, file=sprintf("results/%s-%s.rdata", describe(exp_template), suffix))
-  }
-  return(result)  
-}
 
 # class wf_experiment
 

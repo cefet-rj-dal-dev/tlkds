@@ -1,5 +1,4 @@
 library(devtools)
-#devtools::install_github("cefet-rj-dal/tspredit", force = TRUE, dep = FALSE, upgrade = "never")
 library(daltoolbox)
 library(tspredit)
 
