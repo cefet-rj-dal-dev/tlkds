@@ -13,64 +13,55 @@ create_directories <- function() {
     dir.create('results')
 }
 
-describe <- function(obj) {
-  UseMethod("describe")
+run_ml <- function(x, filename, base_model, train_size, test_size, params = list()) {
+  myexp <- wf_experiment(filename, base_model, train_size)
+  myexp <- set_params(myexp, params)
+  myexp <- train(myexp, x)  
+  results <- NULL
+  for (j in 1:test_size) {
+    result <- test(myexp, x, test_pos = train_size + 1, test_size = j, steps_ahead = 1, ro = TRUE)
+    results <- rbind(results, result)
+  }
+  filename <- sprintf("results/%s.Rdata", filename)
+  save(results, file=filename)
 }
 
-describe.default <- function(obj) {
+describe <- function(obj) {
   if (is.null(obj))
     return("")
   else
     return(as.character(class(obj)[1]))
 }
 
-
 # class wf_experiment
 
-wf_experiment <- function(name, base_model, sw_size, input_size, train_size, filter, preprocess, augment, ranges) {
-  obj <- dal_transform()
-  obj$name <- name
-  obj$base_model <- base_model
-  obj$sw_size <- sw_size
-  obj$input_size <- input_size
-  obj$desc_input_size <- stri_paste(as.character(input_size), collapse='_')  
-  obj$train_size <- train_size
-  obj$filter <- filter 
-  obj$preprocess <- preprocess
-  obj$desc_preprocess <- stri_paste(sapply(preprocess, function(x) { as.character(describe(x)) }), collapse='_')  
-  obj$augment <- augment
-  obj$desc_augment <- stri_paste(sapply(augment, function(x) { as.character(describe(x)) }), collapse='_')  
-  obj$ranges <- ranges
-  
-  class(obj) <- append("wf_experiment", class(obj))    
-  return(obj)
-}
+wf_experiment <- function(filename, base_model, train_size,
+           sw_size = 0,
+           input_size = c(1),
+           filter = ts_fil_none(),
+           preprocess = list(ts_norm_none()),
+           augment = list(ts_aug_none()),
+           ranges = list()) {
+    obj <- dal_transform()
+    obj$filename <- filename
+    obj$base_model <- base_model
+    obj$sw_size <- sw_size
+    obj$input_size <- input_size
+    obj$train_size <- train_size
+    obj$filter <- filter
+    obj$preprocess <- preprocess
+    obj$augment <- augment
+    obj$ranges <- ranges
+    
+    class(obj) <- append("wf_experiment", class(obj))
+    return(obj)
+  }
 
-train <- function(obj, ...) {
-  UseMethod("train")
-}
+train <- function(obj, x) {
+  obj$desc_input_size <- stri_paste(as.character(obj$input_size), collapse = '_')
+  obj$desc_preprocess <- stri_paste(sapply(obj$preprocess, function(x) { as.character(describe(x)) }), collapse='_')  
+  obj$desc_augment <- stri_paste(sapply(obj$augment, function(x) { as.character(describe(x)) }), collapse='_')  
 
-train.default <- function(obj) {
-  return(obj)
-}
-
-test <- function(obj, ...) {
-  UseMethod("test")
-}
-
-test.default <- function(obj) {
-  return(obj)
-}
-
-describe.wf_experiment <- function(obj) {
-  result <- sprintf("%s-%d-%d-%s-%s-%s-%s", describe(obj$base_model), obj$sw_size, obj$train_size, 
-                    obj$desc_input_size, obj$desc_augment, obj$desc_preprocess, obj$desc_augment)
-  if(obj$name != "")
-    result <- sprintf("%s-%s", obj$name, result)
-  return (result)
-}
-
-train.wf_experiment <- function(obj, x) {
   x <- x[1:obj$train_size]
   x <- na.omit(x) 
   
@@ -79,13 +70,13 @@ train.wf_experiment <- function(obj, x) {
   if (length(names(obj$train)) > 0)
     obj$obs <- names(obj$train)[length(obj$train)]
   
+  #apply filter
   xw <- ts_data(as.vector(x), obj$sw_size)
   xw <- transform(obj$filter, xw)
   xy <- ts_projection(xw)      
   
   if (obj$sw_size != 0) {
     mytune <- ts_maintune(obj$input_size, obj$base_model, preprocess = obj$preprocess, augment = obj$augment)
-    mytune$name <- describe(obj$base_model)
     obj$model <- fit(mytune, xy$input, xy$output, obj$ranges)
     obj$input_size <- obj$model$input_size
     obj$preprocess <- obj$model$preprocess
@@ -93,7 +84,7 @@ train.wf_experiment <- function(obj, x) {
   } else {
     obj$model <- fit(obj$base_model, x=xy$input, y=xy$output)
     obj$input_size <- 0
-    obj$preprocess <- ts_aug_none()
+    obj$preprocess <- ts_norm_none()
     obj$augment <- ts_aug_none()
   }
   
@@ -105,27 +96,15 @@ train.wf_experiment <- function(obj, x) {
   
   hyperparameters <- attr(obj$model, "hyperparameters")
   if (!is.null(hyperparameters))
-    save(hyperparameters, file=tolower(sprintf("hyper/%s-hparams.rdata", describe(obj))))
+    save(hyperparameters, file=tolower(sprintf("hyper/%s-hparams.rdata", obj$filename)))
   params <- attr(obj$model, "params")
   if (!is.null(params))
-    save(params, file=tolower(sprintf("hyper/%s-params.rdata", describe(obj))))
+    save(params, file=tolower(sprintf("hyper/%s-params.rdata", obj$filename)))
   
   return(obj)
 }
 
-save_image <- function(obj, imagename, header) {
-  jpeg(sprintf("graphics/%s", imagename), width = 640, height = 480)
-  # 2. Create the plot
-  yvalues <- c(obj$train, obj$test)
-  xlabels <- 1:length(yvalues)
-  if(!is.null(names(yvalues)))
-    xlabels <- names(yvalues)
-  plot_ts_pred(x = xlabels, y = yvalues, yadj=obj$adjust, ypre=obj$prediction)
-  # 3. Close the file
-  dev.off()
-}
-
-test.wf_experiment <- function(obj, x, test_pos, test_size, steps_ahead = 1, ro = TRUE) {
+test <- function(obj, x, test_pos, test_size, steps_ahead = 1, ro = TRUE) {
   obj$test <- x[test_pos:(test_pos+test_size-1)]
   if (obj$sw_size != 0)
     xwt <- ts_data(as.vector(x[(test_pos-obj$sw_size+1):(test_pos+test_size-1)]), obj$sw_size)
@@ -150,7 +129,7 @@ test.wf_experiment <- function(obj, x, test_pos, test_size, steps_ahead = 1, ro 
   smape_train <- 100*obj$ev_adjust$smape
   smape_test <- 100*obj$ev_prediction$smape
   
-  obj$result <- data.frame(name = obj$name, 
+  result <- data.frame(name = obj$filename, 
                            method = describe(obj$base_model), 
                            model = describe(obj$model), 
                            filter = describe(obj$filter),
@@ -164,16 +143,28 @@ test.wf_experiment <- function(obj, x, test_pos, test_size, steps_ahead = 1, ro 
                            smape_train = smape_train,
                            smape_test = smape_test)
   
-  # 1. prepara o arquivo
   if (ro) {
-    imagename <- tolower(sprintf("%s-ro%d.jpg", describe(obj), test_size))
-    header <- sprintf("%s-ro%d", describe.wf_experiment(obj), test_size)
-    save_image(obj, imagename, header)
+    imagename <- tolower(sprintf("%s-ro%d.jpg", obj$filename, test_size))
+    save_image(obj, imagename)
   } 
   else {
-    imagename <- tolower(sprintf("%s-sa%d.jpg", describe(obj), steps_ahead))
-    header <- sprintf("%s-sa%d", describe.wf_experiment(obj), steps_ahead)
-    save_image(obj, imagename, header)
+    imagename <- tolower(sprintf("%s-sa%d.jpg", obj$filename, steps_ahead))
+    save_image(obj, imagename)
   }
-  return(obj)
+  return(result)
 }
+
+save_image <- function(obj, imagename) {
+  # 1. Filename
+  jpeg(sprintf("graphics/%s", imagename), width = 640, height = 480)
+  # 2. Create the plot
+  yvalues <- c(obj$train, obj$test)
+  xlabels <- 1:length(yvalues)
+  if(!is.null(names(yvalues)))
+    xlabels <- as.integer(names(yvalues))
+  grf <- plot_ts_pred(x = xlabels, y = yvalues, yadj=obj$adjust, ypre=obj$prediction)
+  plot(grf)
+  # 3. Close the file
+  dev.off()
+}
+

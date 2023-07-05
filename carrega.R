@@ -56,5 +56,7 @@ carrega <- function() {
   return(dataset)
 }
 
-dataset <- carrega()
-rank <- data.frame(name = names(dataset), pos = 1:length(dataset))
+fertilizers <- carrega()
+rank <- data.frame(name = names(fertilizers), pos = 1:length(fertilizers))
+
+save(fertilizers, file="data/fertilizers.RData")
