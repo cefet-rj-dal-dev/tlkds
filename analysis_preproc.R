@@ -49,8 +49,13 @@ data <- adjust_data(data) |> group_by(name, preprocess) |> summarize(test=mean(s
 prep_data <- cast(data, name ~ preprocess, mean)
 head(prep_data)
 grf <- plot_groupedbar(prep_data, colors=colors[1:4]) + font
+breaks <- seq(0, 14, by = 1)
+labels <- as.character(breaks)
+labels[breaks %% 2 == 1] <- ""
+grf <- grf + scale_y_continuous(breaks = breaks, labels = labels)
 plot(grf)
 ggsave("preprocess.png", width = 15, height = 10, units = "cm")
+
 
 data <- NULL
 data <- rbind(data, result_mlp_swminmax_is)
@@ -61,6 +66,10 @@ data <- adjust_data(data) |> group_by(name, augment) |> summarize(test=mean(smap
 aug_data <- cast(data, name ~ augment, mean)
 head(aug_data)
 grf <- plot_groupedbar(aug_data, colors=colors[1:4]) + font
+breaks <- seq(0, 15, by = 1)
+labels <- as.character(breaks)
+labels[breaks %% 2 == 1] <- ""
+grf <- grf + scale_y_continuous(breaks = breaks, labels = labels)
 plot(grf)
 ggsave("augment.png", width = 15, height = 10, units = "cm")
 
@@ -75,6 +84,10 @@ data <- rbind(data, result_lstm_an_is)
 data <- data |>  dplyr::filter(test_size == 4 & name == 'brazil_p2o5') |> dplyr::arrange(name, method, model, test_size, smape_test)
 method_data <- adjust_data(data) |> group_by(method) |> summarize(test=mean(smape_test)) |> dplyr::select(x = method, value = test)
 grf <- plot_bar(method_data, colors=colors[c(1:5,7)]) + font
+breaks <- seq(0, 20, by = 1)
+labels <- as.character(breaks)
+labels[breaks %% 2 == 1] <- ""
+grf <- grf + scale_y_continuous(breaks = breaks, labels = labels)
 plot(grf)
 ggsave("method.png", width = 15, height = 10, units = "cm")
 
