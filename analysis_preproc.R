@@ -79,13 +79,3 @@ plot(grf)
 ggsave("method.png", width = 15, height = 10, units = "cm")
 
 
-hyperparameters <- get(load("hyper/brazil_p2o5-ts_mlp-8-56-3_4_5_6_7-ts_aug_none-ts_an_ts_gminmax_ts_norm_swminmax-ts_aug_none-hparams.rdata"))
-data <- hyperparameters |> dplyr::group_by(key) |> summarize(preprocess = min(preprocess), error = mean(error)) |> arrange(error)
-print(head(data, 10))
-data_split <- split(data, unique(data$preprocess))
-hyper_data <- data.frame(`an` = data_split$ts_an$error, `min-max` = data_split$ts_gminmax$error, `sw min-max` = data_split$ts_norm_swminmax$error)
-grf <- plot_boxplot(hyper_data, colors="white") + font + ylim(0, 325)
-plot(grf)
-ggsave("hyper.png", width = 15, height = 10, units = "cm")
-
-
