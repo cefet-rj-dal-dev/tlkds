@@ -1,6 +1,7 @@
-library(devtools)
-library(daltoolbox)
+#library(devtools)
+#devtools::install_github("cefet-rj-dal/tspred-it", force = TRUE, dep = FALSE, upgrade = "never")
 library(tspredit)
+library(daltoolbox)
 
 load("data/fertilizers.RData")
 

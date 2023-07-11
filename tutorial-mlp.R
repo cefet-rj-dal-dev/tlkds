@@ -1,8 +1,9 @@
-library(devtools)
+#library(devtools)
 #devtools::install_github("cefet-rj-dal/tspred-it", force = TRUE, dep = FALSE, upgrade = "never")
 library(tspredit)
+library(daltoolbox)
 
-load("data/fertilizers.RData")
+data(fertilizers)
 
 ts <- ts_data(fertilizers$brazil_n, sw = 8)
 
