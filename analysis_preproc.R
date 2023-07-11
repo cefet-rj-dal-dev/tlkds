@@ -31,7 +31,7 @@ adjust_data <- function(data) {
   if (!is.null(data$method))
     data$method <- factor(data$method, levels=c("ts_conv1d", "ts_elm", "ts_mlp", "ts_rf", "ts_svm", "ts_tlstm"), 
                           labels=c("conv1d", "elm", "mlp", "rfr", "svm", "lstm"))
-  data$preprocess <- factor(data$preprocess, levels=c("ts_norm_swminmax", "ts_diff", "ts_an", "ts_gminmax"), 
+  data$preprocess <- factor(data$preprocess, levels=c("ts_swminmax", "ts_diff", "ts_an", "ts_gminmax"), 
                             labels=c("sw min-max", "diff", "an", "min-max"))
   data$augment <- factor(data$augment, levels=c("ts_aug_none", "jitter", "stretch"), 
                          labels=c("none", "jitter", "stretch"))
@@ -45,6 +45,7 @@ data <- rbind(data, result_mlp_gminmax_is)
 data <- rbind(data, result_mlp_swminmax_is)
 data <- data |>  dplyr::filter(test_size == 4) |> dplyr::arrange(name, method, model, test_size, smape_test)
 data <- adjust_data(data) |> group_by(name, preprocess) |> summarize(test=mean(smape_test))
+levels(data$preprocess) <- c("swminmax", "diff", "an", "gminmax")
 
 prep_data <- cast(data, name ~ preprocess, mean)
 head(prep_data)
