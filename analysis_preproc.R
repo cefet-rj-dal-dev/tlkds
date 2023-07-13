@@ -33,7 +33,7 @@ adjust_data <- function(data) {
                           labels=c("conv1d", "elm", "mlp", "rfr", "svm", "lstm"))
   data$preprocess <- factor(data$preprocess, levels=c("ts_swminmax", "ts_diff", "ts_an", "ts_gminmax"), 
                             labels=c("sw min-max", "diff", "an", "min-max"))
-  data$augment <- factor(data$augment, levels=c("ts_aug_none", "jitter", "stretch"), 
+  data$augment <- factor(data$augment, levels=c("ts_augment", "jitter", "stretch"), 
                          labels=c("none", "jitter", "stretch"))
   return(data)  
 }
